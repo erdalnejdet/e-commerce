@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -96,9 +97,13 @@ class CheckoutController extends Controller
             ]);
         }
 
+        // Sipariş numarası oluştur
+        $orderNumber = Order::generateOrderNumber();
+
         // Siparişi veritabanına kaydet
         $order = Order::create([
             'user_id' => $user ? $user->id : null,
+            'order_number' => $orderNumber,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
@@ -117,9 +122,18 @@ class CheckoutController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // İlk durum geçmişini kaydet
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => 'pending',
+            'notes' => 'Sipariş oluşturuldu',
+            'updated_by' => null,
+        ]);
+
         // Sipariş bilgilerini session'a kaydet
         session()->put('order', [
             'id' => $order->id,
+            'order_number' => $order->order_number,
             'customer' => [
                 'first_name' => $order->first_name,
                 'last_name' => $order->last_name,

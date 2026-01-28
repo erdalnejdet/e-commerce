@@ -24,6 +24,20 @@
         </h3>
         <p style="font-size: 2rem; margin: 0; font-weight: 700;" id="totalSections">0</p>
     </div>
+    
+    <div class="admin-card">
+        <h3 style="margin: 0 0 1rem; color: var(--admin-primary);">
+            <i class="bi bi-cart-check"></i> Toplam Sipariş
+        </h3>
+        <p style="font-size: 2rem; margin: 0; font-weight: 700;" id="totalOrders">0</p>
+    </div>
+    
+    <div class="admin-card">
+        <h3 style="margin: 0 0 1rem; color: var(--admin-primary);">
+            <i class="bi bi-hourglass-split"></i> Bekleyen Siparişler
+        </h3>
+        <p style="font-size: 2rem; margin: 0; font-weight: 700;" id="pendingOrders">0</p>
+    </div>
 </div>
 
 <div class="admin-card">
@@ -34,6 +48,9 @@
         </a>
         <a href="/admin/pages/home/edit" style="padding: 0.75rem 1.5rem; background: var(--admin-secondary); color: white; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem;">
             <i class="bi bi-pencil"></i> Ana Sayfa Düzenle
+        </a>
+        <a href="/admin/orders" style="padding: 0.75rem 1.5rem; background: #28a745; color: white; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-cart-check"></i> Siparişleri Görüntüle
         </a>
     </div>
 </div>
@@ -65,6 +82,19 @@
             if (sectionsRes.ok) {
                 const sections = await sectionsRes.json();
                 document.getElementById('totalSections').textContent = sections.data?.length || 0;
+            }
+            
+            // Load orders count
+            const ordersRes = await fetch('/api/admin/orders', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            if (ordersRes.ok) {
+                const orders = await ordersRes.json();
+                const ordersData = orders.data?.data || orders.data || [];
+                document.getElementById('totalOrders').textContent = ordersData.length || 0;
+                document.getElementById('pendingOrders').textContent = ordersData.filter(o => o.order_status === 'pending' || o.order_status === 'processing' || o.order_status === 'preparing').length || 0;
             }
         } catch (error) {
             console.error('Error loading stats:', error);

@@ -207,133 +207,186 @@
     @include('layouts.footer')
 
     <script>
-        // Sepet özetini güncelle
-        function updateOrderSummary() {
-            fetch('/checkout', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+        (function() {
+            'use strict';
+            
+            // Güncelleme devam ediyor mu kontrolü
+            let isUpdating = false;
+            let intervalId = null;
+            let lastCartUpdate = localStorage.getItem('cart_updated') || '0';
+            
+            // Sepet özetini güncelle
+            function updateOrderSummary() {
+                // Eğer zaten bir güncelleme devam ediyorsa, yeni güncelleme başlatma
+                if (isUpdating) {
+                    return;
                 }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.html) {
-                        document.querySelector('.order-summary').innerHTML = data.html;
-                    } else {
-                        // Sepet boşsa sepet sayfasına yönlendir
-                        window.location.href = '/cart';
+                
+                isUpdating = true;
+                
+                fetch('/checkout', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    window.location.reload();
-                });
-        }
-        
-        // Storage event listener - başka sekmede sepet değişikliği olduğunda
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'cart_updated') {
-                updateOrderSummary();
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.html) {
+                            const orderSummaryElement = document.querySelector('.order-summary');
+                            if (orderSummaryElement) {
+                                // Sadece içeriği güncelle, script'leri çalıştırma
+                                orderSummaryElement.innerHTML = data.html;
+                            }
+                        } else {
+                            // Sepet boşsa sepet sayfasına yönlendir
+                            window.location.href = '/cart';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating order summary:', error);
+                    })
+                    .finally(() => {
+                        isUpdating = false;
+                    });
             }
-        });
-        
-        // localStorage değişikliklerini dinle (aynı sekmede)
-        let lastCartUpdate = localStorage.getItem('cart_updated') || '0';
-        setInterval(function() {
-            const currentCartUpdate = localStorage.getItem('cart_updated') || '0';
-            if (currentCartUpdate !== lastCartUpdate) {
-                lastCartUpdate = currentCartUpdate;
-                updateOrderSummary();
-            }
-        }, 500);
-        
-        // Form gönderimi
-        document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
             
-            const submitBtn = document.getElementById('submitOrderBtn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> İşleniyor...';
-            
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch('/checkout/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast('Başarılı!', result.message, 'success');
-                    setTimeout(() => {
-                        window.location.href = result.redirect;
-                    }, 1000);
-                } else {
-                    showToast('Hata!', result.message || 'Bir hata oluştu!', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+            // Storage event listener - başka sekmede sepet değişikliği olduğunda
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'cart_updated' && !isUpdating) {
+                    updateOrderSummary();
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('Hata!', 'Bir hata oluştu!', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        });
-
-        // Telefon numarası formatı
-        document.getElementById('phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 0 && value[0] !== '0') {
-                value = '0' + value;
-            }
-            if (value.length > 11) {
-                value = value.slice(0, 11);
-            }
-            e.target.value = value;
-        });
-
-        // Toast bildirimi göster
-        function showToast(title, message, type = 'success') {
-            const toastHtml = `
-                <div class="toast custom-toast ${type}" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <i class="bi ${type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger'} me-2"></i>
-                        <strong class="me-auto">${title}</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">${message}</div>
-                </div>
-            `;
-
-            let container = document.querySelector('.toast-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.className = 'toast-container position-fixed top-0 end-0 p-3';
-                container.style.zIndex = '9999';
-                document.body.appendChild(container);
-            }
-
-            container.insertAdjacentHTML('beforeend', toastHtml);
-            const toastElement = container.lastElementChild;
-            const toast = new bootstrap.Toast(toastElement, {
-                autohide: true,
-                delay: 3000
             });
-            toast.show();
-
-            toastElement.addEventListener('hidden.bs.toast', function () {
-                toastElement.remove();
-            });
-        }
+            
+            // Interval'ı başlat
+            function startCartUpdateListener() {
+                if (intervalId) {
+                    return; // Zaten çalışıyor
+                }
+                
+                intervalId = setInterval(function() {
+                    // Eğer güncelleme devam ediyorsa, bu iterasyonu atla
+                    if (isUpdating) {
+                        return;
+                    }
+                    
+                    const currentCartUpdate = localStorage.getItem('cart_updated') || '0';
+                    if (currentCartUpdate !== lastCartUpdate) {
+                        lastCartUpdate = currentCartUpdate;
+                        updateOrderSummary();
+                    }
+                }, 2000); // 2000ms'de bir kontrol et (daha az sıklıkla)
+            }
+            
+            // Form gönderimi - sadece bir kez bağla
+            function initCheckoutForm() {
+                const checkoutForm = document.getElementById('checkoutForm');
+                if (!checkoutForm || checkoutForm.dataset.listenerAttached === 'true') {
+                    return;
+                }
+                
+                checkoutForm.dataset.listenerAttached = 'true';
+                checkoutForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const submitBtn = document.getElementById('submitOrderBtn');
+                    if (!submitBtn) {
+                        console.error('Submit button not found');
+                        return;
+                    }
+                    
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> İşleniyor...';
+                    
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData);
+                    
+                    try {
+                        const response = await fetch('/checkout/process', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Interval'ı temizle
+                            if (intervalId) {
+                                clearInterval(intervalId);
+                                intervalId = null;
+                            }
+                            
+                            // showToast kullan (app.js'den gelecek)
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Başarılı!', result.message, 'success');
+                            } else {
+                                alert('Başarılı! ' + result.message);
+                            }
+                            
+                            setTimeout(() => {
+                                window.location.href = result.redirect;
+                            }, 1000);
+                        } else {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Hata!', result.message || 'Bir hata oluştu!', 'error');
+                            } else {
+                                alert('Hata! ' + (result.message || 'Bir hata oluştu!'));
+                            }
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Hata!', 'Bir hata oluştu!', 'error');
+                        } else {
+                            alert('Bir hata oluştu!');
+                        }
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                });
+            }
+            
+            // Telefon numarası formatı - sadece bir kez bağla
+            function initPhoneInput() {
+                const phoneInput = document.getElementById('phone');
+                if (!phoneInput || phoneInput.dataset.listenerAttached === 'true') {
+                    return;
+                }
+                
+                phoneInput.dataset.listenerAttached = 'true';
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 0 && value[0] !== '0') {
+                        value = '0' + value;
+                    }
+                    if (value.length > 11) {
+                        value = value.slice(0, 11);
+                    }
+                    e.target.value = value;
+                });
+            }
+            
+            // Sayfa yüklendiğinde başlat
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    startCartUpdateListener();
+                    initCheckoutForm();
+                    initPhoneInput();
+                });
+            } else {
+                // DOMContentLoaded zaten geçmiş
+                startCartUpdateListener();
+                initCheckoutForm();
+                initPhoneInput();
+            }
+        })();
     </script>
 </body>
 </html>

@@ -124,6 +124,9 @@
                 <li><a href="/admin/pages" class="{{ request()->is('admin/pages*') ? 'active' : '' }}">
                     <i class="bi bi-file-text me-2"></i> Sayfa İçerikleri
                 </a></li>
+                <li><a href="/admin/orders" class="{{ request()->is('admin/orders*') ? 'active' : '' }}">
+                    <i class="bi bi-cart-check me-2"></i> Siparişler
+                </a></li>
             </ul>
         </aside>
         

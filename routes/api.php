@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PageSectionController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Middleware\AdminMiddleware;
 
 // Public Auth Routes
@@ -24,4 +25,10 @@ Route::middleware(['auth:api', AdminMiddleware::class])->prefix('admin')->group(
     Route::apiResource('products', ProductController::class);
     Route::get('/pages', [PageSectionController::class, 'index']);
     Route::put('/pages/{page}', [PageSectionController::class, 'update']);
+    
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::post('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/payment-status', [OrderController::class, 'updatePaymentStatus']);
 });

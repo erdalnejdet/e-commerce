@@ -42,7 +42,9 @@
                                 </thead>
                                 <tbody>
                                     @foreach($cart as $id => $item)
-                                        <tr data-cart-id="{{ $id }}">
+                                        <tr data-cart-id="{{ $id }}" 
+                                            data-price="{{ $item['price'] }}" 
+                                            data-quantity="{{ $item['quantity'] }}">
                                             <td>
                                                 <div class="product-info">
                                                     <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}">
@@ -53,15 +55,15 @@
                                             </td>
                                             <td>{{ strtoupper($item['size']) }}</td>
                                             <td>{{ $item['flavor_name'] ?? $item['flavor'] }}</td>
-                                            <td>₺{{ number_format($item['price'], 2) }}</td>
+                                            <td class="item-price">₺{{ number_format($item['price'], 2) }}</td>
                                             <td>
                                                 <div class="quantity-controls">
-                                                    <button onclick="updateQuantity('{{ $id }}', {{ $item['quantity'] - 1 }})">-</button>
-                                                    <span>{{ $item['quantity'] }}</span>
-                                                    <button onclick="updateQuantity('{{ $id }}', {{ $item['quantity'] + 1 }})">+</button>
+                                                    <button type="button" class="btn-quantity-decrease" data-cart-id="{{ $id }}">-</button>
+                                                    <span class="item-quantity">{{ $item['quantity'] }}</span>
+                                                    <button type="button" class="btn-quantity-increase" data-cart-id="{{ $id }}">+</button>
                                                 </div>
                                             </td>
-                                            <td class="fw-bold">₺{{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                                            <td class="fw-bold item-total">₺{{ number_format($item['price'] * $item['quantity'], 2) }}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-danger" onclick="removeFromCart('{{ $id }}')">
                                                     <i class="bi bi-trash"></i>
@@ -132,6 +134,31 @@
     @include('layouts.footer')
 
     <script>
+        // Sayfa yüklendiğinde buton event listener'larını ekle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Artırma butonları
+            document.querySelectorAll('.btn-quantity-increase').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-cart-id');
+                    const row = document.querySelector(`tr[data-cart-id="${id}"]`);
+                    const quantitySpan = row.querySelector('.item-quantity');
+                    const currentQuantity = parseInt(quantitySpan.textContent) || parseInt(row.getAttribute('data-quantity')) || 1;
+                    updateQuantity(id, currentQuantity + 1);
+                });
+            });
+            
+            // Azaltma butonları
+            document.querySelectorAll('.btn-quantity-decrease').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-cart-id');
+                    const row = document.querySelector(`tr[data-cart-id="${id}"]`);
+                    const quantitySpan = row.querySelector('.item-quantity');
+                    const currentQuantity = parseInt(quantitySpan.textContent) || parseInt(row.getAttribute('data-quantity')) || 1;
+                    updateQuantity(id, currentQuantity - 1);
+                });
+            });
+        });
+        
         // Sepet güncelleme fonksiyonu (sayfa yenilemeden)
         async function updateQuantity(id, quantity) {
             if (quantity < 1) {
@@ -140,11 +167,24 @@
             }
 
             const row = document.querySelector(`tr[data-cart-id="${id}"]`);
-            const quantitySpan = row.querySelector('.quantity-controls span');
-            const totalCell = row.querySelector('td:nth-child(6)');
+            if (!row) {
+                console.error('Satır bulunamadı:', id);
+                return;
+            }
+            
+            const quantitySpan = row.querySelector('.item-quantity') || row.querySelector('.quantity-controls span');
+            const totalCell = row.querySelector('.item-total') || row.querySelector('td:nth-child(6)');
+            
+            if (!quantitySpan || !totalCell) {
+                console.error('Element bulunamadı');
+                return;
+            }
             
             // Loading durumu göster
+            const originalQuantity = quantitySpan.textContent;
             quantitySpan.textContent = '...';
+            row.style.opacity = '0.7';
+            row.style.pointerEvents = 'none';
 
             try {
                 const response = await fetch('/cart/update', {
@@ -161,24 +201,50 @@
                 if (data.success) {
                     // Miktarı güncelle
                     quantitySpan.textContent = quantity;
+                    row.setAttribute('data-quantity', quantity);
+                    
+                    // Fiyatı data attribute'dan al (backend'den gelen gerçek değer)
+                    const price = parseFloat(row.getAttribute('data-price'));
+                    
+                    if (isNaN(price) || price <= 0) {
+                        console.error('Geçersiz fiyat:', price);
+                        location.reload();
+                        return;
+                    }
                     
                     // Toplam fiyatı güncelle
-                    const price = parseFloat(row.querySelector('td:nth-child(4)').textContent.replace('₺', '').replace(',', ''));
-                    const newTotal = (price * quantity).toFixed(2);
-                    totalCell.textContent = `₺${parseFloat(newTotal).toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+                    const newTotal = price * quantity;
+                    totalCell.textContent = `₺${newTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    
+                    // Satır görünürlüğünü geri getir
+                    row.style.opacity = '1';
+                    row.style.pointerEvents = 'auto';
                     
                     // Sepet özetini güncelle
                     updateCartSummary();
                     
-                    showToast('Başarılı!', 'Sepet güncellendi!', 'success');
+                    // Sepet güncellemesini localStorage'a kaydet (checkout sayfası için)
+                    localStorage.setItem('cart_updated', Date.now().toString());
+                    
+                    // Sepet badge'ini güncelle
+                    updateCartBadge();
+                    
+                    // Toast göster (sadece önemli değişikliklerde)
+                    if (Math.abs(quantity - parseInt(originalQuantity)) > 0) {
+                        showToast('Başarılı!', 'Sepet güncellendi!', 'success');
+                    }
                 } else {
                     showToast('Hata!', data.message || 'Bir hata oluştu!', 'error');
-                    location.reload();
+                    quantitySpan.textContent = originalQuantity;
+                    row.style.opacity = '1';
+                    row.style.pointerEvents = 'auto';
                 }
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Hata!', 'Bir hata oluştu!', 'error');
-                location.reload();
+                quantitySpan.textContent = originalQuantity;
+                row.style.opacity = '1';
+                row.style.pointerEvents = 'auto';
             }
         }
 
@@ -271,24 +337,74 @@
 
         // Sepet özetini güncelle
         function updateCartSummary() {
-            const rows = document.querySelectorAll('tbody tr');
+            const rows = document.querySelectorAll('tbody tr[data-cart-id]');
             let subtotal = 0;
             
             rows.forEach(row => {
-                const priceText = row.querySelector('td:nth-child(4)').textContent;
-                const quantityText = row.querySelector('.quantity-controls span').textContent;
-                const price = parseFloat(priceText.replace('₺', '').replace(',', ''));
-                const quantity = parseInt(quantityText);
-                subtotal += price * quantity;
+                // Fiyat ve miktarı data attribute'larından al (backend'den gelen gerçek değerler)
+                let price = parseFloat(row.getAttribute('data-price'));
+                let quantity = parseInt(row.getAttribute('data-quantity'));
+                
+                // Eğer data attribute yoksa, DOM'dan oku
+                if (isNaN(price) || price <= 0) {
+                    const quantitySpan = row.querySelector('.item-quantity') || row.querySelector('.quantity-controls span');
+                    if (quantitySpan) {
+                        quantity = parseInt(quantitySpan.textContent) || 0;
+                    }
+                    // Fiyat için fallback - data attribute olmalı ama yoksa parse et
+                    const priceCell = row.querySelector('.item-price') || row.querySelector('td:nth-child(4)');
+                    if (priceCell) {
+                        const priceText = priceCell.textContent;
+                        price = parseFloat(priceText.replace(/₺/g, '').replace(/\./g, '').replace(',', '.'));
+                    }
+                }
+                
+                // Eğer quantity data attribute'da yoksa, DOM'dan oku
+                if (isNaN(quantity) || quantity <= 0) {
+                    const quantitySpan = row.querySelector('.item-quantity') || row.querySelector('.quantity-controls span');
+                    if (quantitySpan) {
+                        quantity = parseInt(quantitySpan.textContent) || 0;
+                    }
+                }
+                
+                if (!isNaN(price) && !isNaN(quantity) && price > 0 && quantity > 0) {
+                    subtotal += price * quantity;
+                }
             });
             
             const tax = subtotal * 0.18;
             const total = subtotal + tax;
             
-            // Özeti güncelle
-            document.querySelector('.summary-row:nth-child(1) span:last-child').textContent = `₺${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
-            document.querySelector('.summary-row:nth-child(2) span:last-child').textContent = `₺${tax.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
-            document.querySelector('.summary-row.total .amount').textContent = `₺${total.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+            // Özeti güncelle - selector'ları düzelt
+            const summaryBox = document.querySelector('.cart-summary-box');
+            if (summaryBox) {
+                const summaryRows = summaryBox.querySelectorAll('.summary-row');
+                
+                // Ara Toplam (ilk summary-row - Kargo hariç)
+                if (summaryRows[0] && !summaryRows[0].classList.contains('total') && !summaryRows[0].querySelector('.text-success')) {
+                    const spans = summaryRows[0].querySelectorAll('span');
+                    if (spans.length >= 2) {
+                        spans[spans.length - 1].textContent = `₺${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                }
+                
+                // KDV (ikinci summary-row)
+                if (summaryRows[1] && !summaryRows[1].classList.contains('total') && !summaryRows[1].querySelector('.text-success')) {
+                    const spans = summaryRows[1].querySelectorAll('span');
+                    if (spans.length >= 2) {
+                        spans[spans.length - 1].textContent = `₺${tax.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                }
+                
+                // Toplam (total class'ı olan summary-row)
+                const totalRow = summaryBox.querySelector('.summary-row.total');
+                if (totalRow) {
+                    const amountSpan = totalRow.querySelector('.amount');
+                    if (amountSpan) {
+                        amountSpan.textContent = `₺${total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                }
+            }
         }
 
         // Sepet badge'ini güncelle

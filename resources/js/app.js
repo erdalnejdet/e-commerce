@@ -3,6 +3,10 @@ import 'bootstrap';
 import Swiper from 'swiper';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { Modal, Toast } from 'bootstrap';
+import * as bootstrap from 'bootstrap';
+
+// Make Bootstrap available globally for inline scripts
+window.bootstrap = bootstrap;
 
 // Product data
 const products = {
@@ -505,4 +509,15 @@ function showToast(title, message, type = 'success') {
   toastElement.addEventListener('hidden.bs.toast', function () {
     toastElement.remove();
   });
+}
+
+// Make showToast globally available (only if not already defined)
+if (typeof window.showToast === 'undefined') {
+    window.showToast = showToast;
+}
+
+// Make Bootstrap available globally for inline scripts
+import * as bootstrap from 'bootstrap';
+if (typeof window.bootstrap === 'undefined') {
+    window.bootstrap = bootstrap;
 }

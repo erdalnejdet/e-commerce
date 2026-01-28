@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -35,6 +36,12 @@ Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('
 Route::get('/checkout/payment', [CheckoutController::class, 'payment'])->name('checkout.payment');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
+// Order Routes (User)
+Route::middleware('auth')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+});
+
 // Admin Routes (Public - Login)
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminController::class, 'showLogin'])->name('login');
@@ -45,4 +52,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/pages', [PageSectionController::class, 'index'])->name('pages.index');
     Route::get('/pages/{page}/edit', [PageSectionController::class, 'edit'])->name('pages.edit');
     Route::put('/pages/{page}', [PageSectionController::class, 'update'])->name('pages.update');
+    
+    // Orders Management
+    Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/status', [\App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{id}/payment-status', [\App\Http\Controllers\Admin\OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 });

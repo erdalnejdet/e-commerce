@@ -36,7 +36,8 @@ return new class extends Migration
             // Ödeme
             $table->string('payment_method'); // cash_on_delivery, credit_card
             $table->string('payment_status')->default('pending'); // pending, paid, failed
-            $table->string('order_status')->default('pending'); // pending, processing, shipped, delivered, cancelled
+            $table->string('order_status')->default('pending'); // pending, processing, preparing, shipped, delivered, cancelled
+            $table->string('order_number')->unique()->nullable(); // Sipariş numarası (örn: ORD-20260128-001)
             
             // Notlar
             $table->text('notes')->nullable();

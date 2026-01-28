@@ -21,9 +21,21 @@
                 </div>
                 
                 <h1 class="success-title">Siparişiniz Alındı!</h1>
+                @if(isset($order['order_number']))
+                    <div style="background: #f8f5f2; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                        <strong style="color: var(--primary-color, #8b7355); font-size: 1.2rem;">Sipariş Numaranız: {{ $order['order_number'] }}</strong>
+                    </div>
+                @endif
                 <p class="success-message">
                     Siparişiniz başarıyla oluşturuldu. En kısa sürede hazırlanıp size ulaştırılacaktır.
                 </p>
+                @auth
+                    <p style="margin-top: 1rem;">
+                        <a href="{{ route('orders.index') }}" style="color: var(--primary-color, #8b7355); text-decoration: underline;">
+                            Sipariş geçmişinizi görüntülemek için tıklayın
+                        </a>
+                    </p>
+                @endauth
 
                 <div class="order-details">
                     <div class="detail-card">

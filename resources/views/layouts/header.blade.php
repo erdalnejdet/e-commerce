@@ -32,7 +32,7 @@
                             <span style="margin-left: 0.25rem;">{{ Auth::user()->name }}</span>
                         </a>
                         <ul class="dropdown-menu" style="position: absolute; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 150px; padding: 0.5rem 0; margin-top: 0.5rem; list-style: none;">
-                            <li><a class="dropdown-item" href="#" style="padding: 0.5rem 1rem; display: block; text-decoration: none; color: #333;">Hesabım</a></li>
+                            <li><a class="dropdown-item" href="{{ route('orders.index') }}" style="padding: 0.5rem 1rem; display: block; text-decoration: none; color: #333;">Siparişlerim</a></li>
                             <li><hr style="margin: 0.5rem 0;"></li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
