@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\PageSection;
+use App\Models\HomepageFlavour;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -50,6 +51,9 @@ class HomeController extends Controller
             'about_image' => PageSection::getSection('home', 'about_image', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80'),
         ];
         
-        return view('home', compact('products', 'sections', 'productsData'));
+        // Get active flavours
+        $flavours = HomepageFlavour::getActive();
+        
+        return view('home', compact('products', 'sections', 'productsData', 'flavours'));
     }
 }

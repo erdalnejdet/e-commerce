@@ -146,42 +146,6 @@
                             @endif
                         </div>
 
-                        <!-- Ödeme Yöntemi -->
-                        <div class="checkout-section">
-                            <h3 class="section-title">
-                                <i class="bi bi-credit-card me-2"></i>
-                                Ödeme Yöntemi
-                            </h3>
-                            
-                            <div class="payment-methods">
-                                <div class="payment-method">
-                                    <input type="radio" id="cash_on_delivery" name="payment_method" value="cash_on_delivery" checked>
-                                    <label for="cash_on_delivery" class="payment-label">
-                                        <div class="payment-icon">
-                                            <i class="bi bi-cash-coin"></i>
-                                        </div>
-                                        <div class="payment-info">
-                                            <div class="payment-name">Kapıda Ödeme</div>
-                                            <div class="payment-desc">Teslimat sırasında nakit veya kredi kartı ile ödeme</div>
-                                        </div>
-                                    </label>
-                                </div>
-                                
-                                <div class="payment-method">
-                                    <input type="radio" id="credit_card" name="payment_method" value="credit_card">
-                                    <label for="credit_card" class="payment-label">
-                                        <div class="payment-icon">
-                                            <i class="bi bi-credit-card-2-front"></i>
-                                        </div>
-                                        <div class="payment-info">
-                                            <div class="payment-name">Kredi Kartı</div>
-                                            <div class="payment-desc">Güvenli ödeme sayfasına yönlendirileceksiniz</div>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Notlar -->
                         <div class="checkout-section">
                             <h3 class="section-title">
@@ -321,21 +285,17 @@
                                 intervalId = null;
                             }
                             
-                            // showToast kullan (app.js'den gelecek)
-                            if (typeof window.showToast === 'function') {
-                                window.showToast('Başarılı!', result.message, 'success');
-                            } else {
-                                alert('Başarılı! ' + result.message);
-                            }
-                            
-                            setTimeout(() => {
-                                window.location.href = result.redirect;
-                            }, 1000);
+                            // Ödeme sayfasına yönlendir
+                            window.location.href = result.redirect;
                         } else {
                             if (typeof window.showToast === 'function') {
                                 window.showToast('Hata!', result.message || 'Bir hata oluştu!', 'error');
                             } else {
-                                alert('Hata! ' + (result.message || 'Bir hata oluştu!'));
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Hata!',
+                                    text: result.message || 'Bir hata oluştu!'
+                                });
                             }
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalText;
@@ -345,7 +305,11 @@
                         if (typeof window.showToast === 'function') {
                             window.showToast('Hata!', 'Bir hata oluştu!', 'error');
                         } else {
-                            alert('Bir hata oluştu!');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Hata!',
+                                text: 'Bir hata oluştu!'
+                            });
                         }
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalText;

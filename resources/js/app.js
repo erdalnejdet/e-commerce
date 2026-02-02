@@ -4,9 +4,13 @@ import Swiper from 'swiper';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { Modal, Toast } from 'bootstrap';
 import * as bootstrap from 'bootstrap';
+import Swal from 'sweetalert2';
 
 // Make Bootstrap available globally for inline scripts
 window.bootstrap = bootstrap;
+
+// Make SweetAlert2 available globally
+window.Swal = Swal;
 
 // Product data
 const products = {
@@ -230,7 +234,11 @@ function openProductModal(productId) {
   }
   
   if (!currentProduct) {
-    alert('Ürün bulunamadı!');
+    Swal.fire({
+      icon: 'error',
+      title: 'Hata!',
+      text: 'Ürün bulunamadı!'
+    });
     return;
   }
 
@@ -394,7 +402,11 @@ function checkFormValidity() {
 // Add to cart
 window.addToCart = async function () {
   if (!selectedSize || !selectedFlavor) {
-    alert('Lütfen boy ve lezzet seçiniz!');
+    Swal.fire({
+      icon: 'warning',
+      title: 'Uyarı!',
+      text: 'Lütfen boy ve lezzet seçiniz!'
+    });
     return;
   }
 
@@ -477,47 +489,32 @@ function openCartModal() {
   window.location.href = '/cart';
 }
 
-// Show toast notification
+// Show toast notification using SweetAlert2
 function showToast(title, message, type = 'success') {
-  const toastHtml = `
-        <div class="toast custom-toast ${type}" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="bi ${type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger'} me-2"></i>
-                <strong class="me-auto">${title}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body">${message}</div>
-        </div>
-    `;
+  const iconMap = {
+    'success': 'success',
+    'error': 'error',
+    'warning': 'warning',
+    'info': 'info'
+  };
 
-  let container = document.querySelector('.toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.className = 'toast-container position-fixed top-0 end-0 p-3';
-    container.style.zIndex = '9999';
-    document.body.appendChild(container);
-  }
-
-  container.insertAdjacentHTML('beforeend', toastHtml);
-  const toastElement = container.lastElementChild;
-  const toast = new Toast(toastElement, {
-    autohide: true,
-    delay: 3000
-  });
-  toast.show();
-
-  toastElement.addEventListener('hidden.bs.toast', function () {
-    toastElement.remove();
+  Swal.fire({
+    title: title,
+    text: message,
+    icon: iconMap[type] || 'success',
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
   });
 }
 
 // Make showToast globally available (only if not already defined)
 if (typeof window.showToast === 'undefined') {
     window.showToast = showToast;
-}
-
-// Make Bootstrap available globally for inline scripts
-import * as bootstrap from 'bootstrap';
-if (typeof window.bootstrap === 'undefined') {
-    window.bootstrap = bootstrap;
 }

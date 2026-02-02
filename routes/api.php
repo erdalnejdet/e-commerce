@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PageSectionController;
+use App\Http\Controllers\Admin\FlavourController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -23,6 +24,7 @@ Route::prefix('auth')->middleware(['auth:api'])->group(function () {
 // Protected Admin API Routes
 Route::middleware(['auth:api', AdminMiddleware::class])->prefix('admin')->group(function () {
     Route::apiResource('products', ProductController::class);
+    Route::apiResource('flavours', FlavourController::class);
     Route::get('/pages', [PageSectionController::class, 'index']);
     Route::put('/pages/{page}', [PageSectionController::class, 'update']);
     

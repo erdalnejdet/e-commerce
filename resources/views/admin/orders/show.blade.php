@@ -99,7 +99,7 @@
                         <div style="padding: 1rem; background: #f8f5f2; border-radius: 8px; border-left: 4px solid var(--admin-primary);">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                 <div>
-                                    <strong>{{ $history->status }}</strong>
+                                    <strong>{{ $history->status_label }}</strong>
                                     @if($history->updatedBy)
                                         <div style="font-size: 0.85rem; color: #666;">{{ $history->updatedBy->name }} tarafından</div>
                                     @endif
@@ -210,20 +210,73 @@
 </style>
 
 <script>
-    document.getElementById('statusForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!confirm('Sipariş durumunu güncellemek istediğinize emin misiniz?')) {
-            return;
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Swal === 'undefined') {
+        console.error('SweetAlert2 is not loaded');
+        // Fallback to confirm
+        const statusForm = document.getElementById('statusForm');
+        const paymentStatusForm = document.getElementById('paymentStatusForm');
+        
+        if (statusForm) {
+            statusForm.addEventListener('submit', function(e) {
+                if (!confirm('Sipariş durumunu güncellemek istediğinize emin misiniz?')) {
+                    e.preventDefault();
+                }
+            });
         }
-        this.submit();
-    });
+        
+        if (paymentStatusForm) {
+            paymentStatusForm.addEventListener('submit', function(e) {
+                if (!confirm('Ödeme durumunu güncellemek istediğinize emin misiniz?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+        return;
+    }
+
+    const statusForm = document.getElementById('statusForm');
+    const paymentStatusForm = document.getElementById('paymentStatusForm');
+
+    if (statusForm) {
+        statusForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const result = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Sipariş durumunu güncellemek istediğinize emin misiniz?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#8b7355',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Güncelle',
+                cancelButtonText: 'İptal'
+            });
+
+            if (result.isConfirmed) {
+                this.submit();
+            }
+        });
+    }
     
-    document.getElementById('paymentStatusForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!confirm('Ödeme durumunu güncellemek istediğinize emin misiniz?')) {
-            return;
-        }
-        this.submit();
-    });
+    if (paymentStatusForm) {
+        paymentStatusForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const result = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Ödeme durumunu güncellemek istediğinize emin misiniz?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#8b7355',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Güncelle',
+                cancelButtonText: 'İptal'
+            });
+
+            if (result.isConfirmed) {
+                this.submit();
+            }
+        });
+    }
+});
 </script>
 @endsection

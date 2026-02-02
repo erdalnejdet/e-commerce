@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Giriş - PAULINE</title>
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background: linear-gradient(135deg, #8b7355 0%, #c9a882 100%);
@@ -141,13 +142,29 @@
                     // Redirect to dashboard
                     window.location.href = '/admin/dashboard';
                 } else {
-                    alert(data.message || 'Giriş başarısız!');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Giriş Başarısız!',
+                            text: data.message || 'Giriş başarısız!'
+                        });
+                    } else {
+                        alert(data.message || 'Giriş başarısız!');
+                    }
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Bir hata oluştu!');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: 'Bir hata oluştu!'
+                    });
+                } else {
+                    alert('Bir hata oluştu!');
+                }
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }

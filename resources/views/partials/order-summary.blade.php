@@ -42,8 +42,8 @@
     </div>
 
     <button type="submit" class="btn btn-submit-order" id="submitOrderBtn">
-        <i class="bi bi-lock-fill me-2"></i>
-        Siparişi Tamamla
+        <i class="bi bi-credit-card me-2"></i>
+        Ödemeye Geç
     </button>
 
     <div class="security-info">

@@ -250,7 +250,18 @@
 
         // Sepetten ürün çıkarma
         async function removeFromCart(id) {
-            if (!confirm('Bu ürünü sepetten çıkarmak istediğinize emin misiniz?')) {
+            const result = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu ürünü sepetten çıkarmak istediğinize emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#8b7355',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Çıkar',
+                cancelButtonText: 'İptal'
+            });
+
+            if (!result.isConfirmed) {
                 return;
             }
 
@@ -306,7 +317,18 @@
 
         // Sepeti temizle
         async function clearCart() {
-            if (!confirm('Sepeti tamamen temizlemek istediğinize emin misiniz?')) {
+            const result = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Sepeti tamamen temizlemek istediğinize emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Temizle',
+                cancelButtonText: 'İptal'
+            });
+
+            if (!result.isConfirmed) {
                 return;
             }
 

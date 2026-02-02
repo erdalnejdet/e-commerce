@@ -6,6 +6,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PageSectionController;
+use App\Http\Controllers\Admin\FlavourController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HomeController;
@@ -34,6 +35,7 @@ Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/checkout/payment', [CheckoutController::class, 'payment'])->name('checkout.payment');
+Route::post('/checkout/payment/process', [CheckoutController::class, 'processPayment'])->name('checkout.payment.process');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
 // Order Routes (User)
@@ -49,6 +51,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Protected Admin Routes (will be protected by session/JWT in frontend)
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::resource('products', ProductController::class);
+    Route::resource('flavours', FlavourController::class);
     Route::get('/pages', [PageSectionController::class, 'index'])->name('pages.index');
     Route::get('/pages/{page}/edit', [PageSectionController::class, 'edit'])->name('pages.edit');
     Route::put('/pages/{page}', [PageSectionController::class, 'update'])->name('pages.update');

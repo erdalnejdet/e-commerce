@@ -31,4 +31,21 @@ class OrderStatusHistory extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /**
+     * Get status label in Turkish
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        $statuses = [
+            'pending' => 'Beklemede',
+            'processing' => 'İşleniyor',
+            'preparing' => 'Hazırlanıyor',
+            'shipped' => 'Kargoya Verildi',
+            'delivered' => 'Teslim Edildi',
+            'cancelled' => 'İptal Edildi',
+        ];
+
+        return $statuses[$this->status] ?? $this->status;
+    }
 }

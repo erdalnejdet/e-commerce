@@ -132,6 +132,12 @@
                 </div>
 
                 <div class="success-actions">
+                    @auth
+                        <a href="{{ route('orders.index') }}" class="btn btn-primary">
+                            <i class="bi bi-list-ul me-2"></i>
+                            Siparişlerim
+                        </a>
+                    @endauth
                     <a href="/" class="btn btn-primary">
                         <i class="bi bi-house me-2"></i>
                         Ana Sayfaya Dön

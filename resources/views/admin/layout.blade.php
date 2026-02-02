@@ -7,6 +7,7 @@
     <title>@yield('title', 'Admin Panel') - PAULINE</title>
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --admin-primary: #8b7355;
@@ -121,6 +122,9 @@
                 <li><a href="/admin/products" class="{{ request()->is('admin/products*') ? 'active' : '' }}">
                     <i class="bi bi-box-seam me-2"></i> Ürünler
                 </a></li>
+                <li><a href="/admin/flavours" class="{{ request()->is('admin/flavours*') ? 'active' : '' }}">
+                    <i class="bi bi-stars me-2"></i> Lezzetler
+                </a></li>
                 <li><a href="/admin/pages" class="{{ request()->is('admin/pages*') ? 'active' : '' }}">
                     <i class="bi bi-file-text me-2"></i> Sayfa İçerikleri
                 </a></li>
@@ -156,45 +160,88 @@
     </div>
 
     <script>
-        // Load user info
-        const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
-        if (adminUser.name) {
-            document.getElementById('adminUserName').textContent = adminUser.name;
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user info
+            const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+            const userNameElement = document.getElementById('adminUserName');
+            if (adminUser.name && userNameElement) {
+                userNameElement.textContent = adminUser.name;
+            }
+            
+            // Check authentication
+            if (!localStorage.getItem('admin_token')) {
+                window.location.href = '/admin/login';
+            }
+            
+            // Add token to all fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const token = localStorage.getItem('admin_token');
+                if (token && args[1]) {
+                    args[1].headers = {
+                        ...args[1].headers,
+                        'Authorization': 'Bearer ' + token
+                    };
+                }
+                return originalFetch.apply(this, args);
+            };
+        });
         
-        // Check authentication
-        if (!localStorage.getItem('admin_token')) {
-            window.location.href = '/admin/login';
-        }
-        
-        function logout() {
-            const token = localStorage.getItem('admin_token');
-            if (token) {
-                fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
+        // Logout function (global)
+        async function logout() {
+            if (typeof Swal === 'undefined') {
+                if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+                    const token = localStorage.getItem('admin_token');
+                    if (token) {
+                        fetch('/api/auth/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'Content-Type': 'application/json'
+                            }
+                        });
                     }
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    window.location.href = '/admin/login';
+                }
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Çıkış yapmak istediğinize emin misiniz?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#8b7355',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Çıkış Yap',
+                cancelButtonText: 'İptal'
+            });
+
+            if (result.isConfirmed) {
+                const token = localStorage.getItem('admin_token');
+                if (token) {
+                    fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Çıkış yapıldı!',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/admin/login';
                 });
             }
-            localStorage.removeItem('admin_token');
-            localStorage.removeItem('admin_user');
-            window.location.href = '/admin/login';
         }
-        
-        // Add token to all fetch requests
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            const token = localStorage.getItem('admin_token');
-            if (token && args[1]) {
-                args[1].headers = {
-                    ...args[1].headers,
-                    'Authorization': 'Bearer ' + token
-                };
-            }
-            return originalFetch.apply(this, args);
-        };
     </script>
 </body>
 </html>

@@ -159,7 +159,15 @@
         if (container.children.length > 1) {
             button.closest('.flavor-item').remove();
         } else {
-            alert('En az bir lezzet eklemelisiniz!');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Uyarı!',
+                    text: 'En az bir lezzet eklemelisiniz!'
+                });
+            } else {
+                alert('En az bir lezzet eklemelisiniz!');
+            }
         }
     }
     
