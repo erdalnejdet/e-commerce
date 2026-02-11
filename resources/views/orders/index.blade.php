@@ -38,7 +38,7 @@
                             </a>
                         @endif
                     </div>
-                    <button type="submit" class="search-btn">
+                    <button type="submit" class="search-btn" id="searchBtn" {{ empty($searchTerm) ? 'disabled' : '' }}>
                         <i class="bi bi-search"></i>
                         <span>Ara</span>
                     </button>
@@ -79,18 +79,9 @@
                                     @if($order->statusHistory && $order->statusHistory->count() > 0)
                                         @php
                                             $latestStatus = $order->statusHistory->first();
-                                            $statusLabels = [
-                                                'pending' => 'Beklemede',
-                                                'processing' => 'İşleniyor',
-                                                'preparing' => 'Hazırlanıyor',
-                                                'shipped' => 'Kargoya Verildi',
-                                                'delivered' => 'Teslim Edildi',
-                                                'cancelled' => 'İptal Edildi',
-                                            ];
-                                            $latestStatusLabel = $statusLabels[$latestStatus->status] ?? $latestStatus->status;
                                         @endphp
                                         <div style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
-                                            <i class="bi bi-info-circle"></i> Son durum: {{ $latestStatusLabel }}
+                                            <i class="bi bi-info-circle"></i> Son durum: {{ $latestStatus->status_label }}
                                             @if($latestStatus->created_at->diffInHours() < 24)
                                                 <span style="color: #999;">({{ $latestStatus->created_at->diffForHumans() }})</span>
                                             @endif
@@ -154,5 +145,31 @@
     </section>
 
     @include('layouts.footer')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            if (searchInput && searchBtn) {
+                // Sayfa yüklendiğinde kontrol et
+                function checkInput() {
+                    const value = searchInput.value.trim();
+                    searchBtn.disabled = value === '';
+                }
+                
+                // İlk kontrol
+                checkInput();
+                
+                // Input değiştiğinde kontrol et
+                searchInput.addEventListener('input', checkInput);
+                searchInput.addEventListener('keyup', function(e) {
+                    if (e.key === 'Enter' && searchBtn.disabled) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

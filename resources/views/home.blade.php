@@ -11,7 +11,47 @@
 </head>
 <body>
     @include('layouts.header')
-
+<!-- Scrolling Info Bar -->
+<div class="scrolling-info-bar">
+    <div class="scrolling-info-wrapper">
+        <div class="scrolling-info-content">
+            <!-- Multiple Sets for Smooth Infinite Scroll -->
+            <div class="scrolling-item">
+                <i class="bi bi-truck"></i>
+                <span>Aynı Gün Teslimat</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-gift"></i>
+                <span>Ücretsiz Kargo</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-shield-check"></i>
+                <span>Güvenli Ödeme</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-clock-history"></i>
+                <span>7/24 Destek</span>
+            </div>
+            <!-- Duplicate Set for Infinite Loop -->
+            <div class="scrolling-item">
+                <i class="bi bi-truck"></i>
+                <span>Aynı Gün Teslimat</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-gift"></i>
+                <span>Ücretsiz Kargo</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-shield-check"></i>
+                <span>Güvenli Ödeme</span>
+            </div>
+            <div class="scrolling-item">
+                <i class="bi bi-clock-history"></i>
+                <span>7/24 Destek</span>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Hero Section -->
     <section id="home" class="hero-section">
         <img src="{{ $sections['hero_image'] ?? 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1920&q=80' }}" alt="Hero Cake" class="hero-image">
@@ -21,10 +61,11 @@
             <button class="btn btn-hero">Ürünleri Keşfet</button>
         </div>
     </section>
+    
 
     <!-- Top Picks Section -->
     <section id="products" class="top-picks-section">
-        <div class="container">
+        <div class="container-fluid">
             <div class="section-title">
                 <h2>{{ $sections['top_picks_title'] ?? 'TOP PICKS' }}</h2>
                 <p>{{ $sections['top_picks_subtitle'] ?? 'En çok tercih edilen özel tasarım pastalarımız' }}</p>
@@ -34,7 +75,7 @@
                 <div class="swiper-wrapper">
                     @forelse($products as $product)
                         <div class="swiper-slide">
-                            <div class="product-card">
+                            <div class="product-card" data-product-id="{{ $product->id }}">
                                 <div class="product-image">
                                     <img src="{{ $product->image ?? 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80' }}" alt="{{ $product->name }}">
                                     @if($product->badge)
@@ -62,10 +103,6 @@
                 
                 <!-- Pagination -->
                 <div class="swiper-pagination"></div>
-                
-                <!-- Navigation -->
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
             </div>
         </div>
     </section>
@@ -144,7 +181,7 @@
                     @if($sections['about_content_2'])
                         <p>{{ $sections['about_content_2'] }}</p>
                     @endif
-                    <button class="btn btn-learn-more">Daha Fazla Bilgi</button>
+                    <a href="{{ route('about') }}" class="btn btn-learn-more">Daha Fazla Bilgi</a>
                 </div>
             </div>
         </div>

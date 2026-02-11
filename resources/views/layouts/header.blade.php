@@ -17,10 +17,10 @@
                     <a class="nav-link" href="/#flavours">Lezzetler</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/#about">Hakkımızda</a>
+                    <a class="nav-link" href="{{ route('about') }}">Hakkımızda</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/#contact">İletişim</a>
+                    <a class="nav-link" href="{{ route('contact') }}">İletişim</a>
                 </li>
             </ul>
             <div class="navbar-icons">

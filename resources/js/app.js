@@ -1,7 +1,7 @@
 import './bootstrap';
 import 'bootstrap';
 import Swiper from 'swiper';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay, FreeMode } from 'swiper/modules';
 import { Modal, Toast } from 'bootstrap';
 import * as bootstrap from 'bootstrap';
 import Swal from 'sweetalert2';
@@ -138,49 +138,65 @@ let selectedFlavor = null;
 let quantity = 1;
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Initialize Swiper for Top Picks
-  const topPicksSwiper = new Swiper('.top-picks-swiper', {
-    modules: [Navigation, Pagination, Autoplay],
-    slidesPerView: 1,
-    spaceBetween: 30,
-    loop: true,
-    autoplay: {
-      delay: 3000,
-      disableOnInteraction: false,
-    },
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-    breakpoints: {
-      640: {
-        slidesPerView: 2,
-        spaceBetween: 20,
-      },
-      768: {
-        slidesPerView: 3,
+  // Initialize Swiper for Top Picks - Continuous Scrolling
+  const swiperElement = document.querySelector('.top-picks-swiper');
+  if (swiperElement) {
+    console.log("swiper is    ")
+    try {
+      const topPicksSwiper = new Swiper('.top-picks-swiper', {
+        modules: [Navigation, Pagination, Autoplay, FreeMode],
+        loop: true,
+        autoplay: {
+          delay: 0,
+          disableOnInteraction: true,
+          pauseOnMouseEnter: false,
+        },
+        freeMode: true,
+        speed: 3000,
+        roundLengths: true,
+        grabCursor: true,
+        freeModeMomentum: false,
+        slidesPerView: 1,
         spaceBetween: 30,
-      },
-      1024: {
-        slidesPerView: 4,
-        spaceBetween: 30,
-      },
-    },
-  });
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+          640: {
+            slidesPerView: 2,
+            spaceBetween: 20,
+          },
+          768: {
+            slidesPerView: 3,
+            spaceBetween: 30,
+          },
+          1024: {
+            slidesPerView: 5,
+            spaceBetween: 30,
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Swiper initialization error:', error);
+    }
+  }
 
   // Navbar scroll effect
   const navbar = document.querySelector('.navbar');
-  window.addEventListener('scroll', function () {
-    if (window.scrollY > 50) {
-      navbar.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.1)';
-    } else {
-      navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
-    }
-  });
+  if (navbar) {
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 50) {
+        navbar.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.1)';
+      } else {
+        navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
+      }
+    });
+  }
 
   // Smooth scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -200,10 +216,16 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // Product card click handlers
-  document.querySelectorAll('.product-card').forEach((card, index) => {
+  document.querySelectorAll('.product-card').forEach((card) => {
     card.addEventListener('click', function (e) {
-      if (!e.target.classList.contains('btn-add-cart')) {
-        openProductModal(index + 1);
+      // Don't trigger if clicking on the button
+      if (!e.target.classList.contains('btn-add-cart') && !e.target.closest('.btn-add-cart')) {
+        // Get product ID from data attribute
+        const productId = this.dataset.productId;
+        
+        if (productId) {
+          openProductModal(parseInt(productId));
+        }
       }
     });
   });
@@ -274,7 +296,7 @@ function openProductModal(productId) {
                                         <label>Size <span class="required">*</span></label>
                                         <div class="size-options">
                                             ${currentProduct.sizes.map(size => `
-                                                <div class="option-item" onclick="selectSize('${size.id}', ${size.price})">
+                                                <div class="option-item" onclick="selectSize('${size.id}', ${size.price}, this)">
                                                     <input type="radio" name="size" value="${size.id}">
                                                     <div class="option-info">
                                                         <div class="option-name">${size.name}</div>
@@ -289,7 +311,7 @@ function openProductModal(productId) {
                                         <label>Flavor <span class="required">*</span></label>
                                         <div class="flavor-options">
                                             ${currentProduct.flavors.map(flavor => `
-                                                <div class="option-item" onclick="selectFlavor('${flavor.id}', '${flavor.name}')">
+                                                <div class="option-item" onclick="selectFlavor('${flavor.id}', '${flavor.name}', this)">
                                                     <input type="radio" name="flavor" value="${flavor.id}">
                                                     <img src="${flavor.image}" alt="${flavor.name}" class="option-image">
                                                     <div class="option-info">
@@ -348,21 +370,25 @@ window.changeMainImage = function (src, element) {
 };
 
 // Select size
-window.selectSize = function (sizeId, price) {
+window.selectSize = function (sizeId, price, element) {
   selectedSize = { id: sizeId, price: price };
   document.querySelectorAll('.size-options .option-item').forEach(item => item.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  event.currentTarget.querySelector('input').checked = true;
+  if (element) {
+    element.classList.add('selected');
+    element.querySelector('input').checked = true;
+  }
   updatePrice();
   checkFormValidity();
 };
 
 // Select flavor
-window.selectFlavor = function (flavorId, flavorName) {
+window.selectFlavor = function (flavorId, flavorName, element) {
   selectedFlavor = { id: flavorId, name: flavorName };
   document.querySelectorAll('.flavor-options .option-item').forEach(item => item.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  event.currentTarget.querySelector('input').checked = true;
+  if (element) {
+    element.classList.add('selected');
+    element.querySelector('input').checked = true;
+  }
   checkFormValidity();
 };
 

@@ -18,8 +18,8 @@
                 <a href="/">Ana Sayfa</a>
                 <a href="/#products">Ürünler</a>
                 <a href="/#flavours">Lezzetler</a>
-                <a href="/#about">Hakkımızda</a>
-                <a href="/#contact">İletişim</a>
+                <a href="{{ route('about') }}">Hakkımızda</a>
+                <a href="{{ route('contact') }}">İletişim</a>
             </div>
             
             <div class="footer-section">
