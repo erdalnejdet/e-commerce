@@ -7,7 +7,7 @@
     <meta name="description" content="PAULINE - Hakkımızda. Sevgiyle yapılmış, özenle sunulmuş pastalar ve tatlılar.">
     <title>Hakkımızda - PAULINE</title>
     
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @include('partials.assets')
 </head>
 <body>
     @include('layouts.header')

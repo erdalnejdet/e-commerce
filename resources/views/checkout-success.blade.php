@@ -7,7 +7,7 @@
     <meta name="description" content="Sipariş Onayı - PAULINE">
     <title>Sipariş Onayı - PAULINE</title>
     
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @include('partials.assets')
 </head>
 <body>
     @include('layouts.header')

@@ -7,8 +7,7 @@
     <meta name="description" content="Ödeme - PAULINE">
     <title>Ödeme - PAULINE</title>
     
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    @include('partials.assets')
 </head>
 <body>
     @include('layouts.header')

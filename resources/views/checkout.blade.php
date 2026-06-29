@@ -7,7 +7,7 @@
     <meta name="description" content="Ödeme - PAULINE">
     <title>Ödeme - PAULINE</title>
     
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @include('partials.assets')
 </head>
 <body>
     @include('layouts.header')

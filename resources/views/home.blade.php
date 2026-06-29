@@ -7,7 +7,7 @@
     <meta name="description" content="PAULINE - Özel tasarım pastalar ve tatlılar. Sevgiyle yapılmış, özenle sunulmuş.">
     <title>PAULINE - Pastane & Tatlı Atölyesi</title>
     
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @include('partials.assets')
 </head>
 <body>
     @include('layouts.header')
