@@ -40,7 +40,7 @@
         <div style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Ana Görsel *</label>
             <input type="file" name="image" accept="image/*" required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
-            <small style="color: #666; font-size: 0.85rem;">Maksimum 2MB, JPG, PNG, GIF veya WebP formatında</small>
+            <small style="color: #666; font-size: 0.85rem;">Maksimum 5MB, JPG, PNG, GIF veya WebP (Cloudinary'e yüklenir)</small>
         </div>
         
         <div style="margin-bottom: 1.5rem;">
@@ -94,8 +94,8 @@
                         <input type="text" name="flavors[0][name]" placeholder="Örn: Nutella" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel URL</label>
-                        <input type="url" name="flavors[0][image]" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel</label>
+                        <input type="file" name="flavors[0][image]" accept="image/*" style="width: 100%; padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                     </div>
                     <div style="display: flex; align-items: flex-end;">
                         <button type="button" onclick="removeFlavor(this)" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
@@ -141,8 +141,8 @@
                 <input type="text" name="flavors[${flavorIndex}][name]" placeholder="Örn: Nutella" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
             </div>
             <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel URL</label>
-                <input type="url" name="flavors[${flavorIndex}][image]" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel</label>
+                <input type="file" name="flavors[${flavorIndex}][image]" accept="image/*" style="width: 100%; padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 8px;">
             </div>
             <div style="display: flex; align-items: flex-end;">
                 <button type="button" onclick="removeFlavor(this)" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">

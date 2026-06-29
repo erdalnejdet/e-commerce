@@ -4,134 +4,78 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(private CloudinaryService $cloudinary)
+    {
+    }
+
     public function index()
     {
         $products = Product::orderBy('sort_order')->get();
-        
+
         if (request()->wantsJson() || request()->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'data' => $products
+                'data' => $products,
             ]);
         }
-        
+
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.products.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'base_price' => 'required|numeric|min:0',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'badge' => 'nullable|string|max:50',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'nullable|string',
-            'flavors' => 'nullable|array',
-            'is_active' => 'nullable',
-            'sort_order' => 'nullable|integer',
-        ]);
+        $validator = $this->makeValidator($request, true);
 
         if ($validator->fails()) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+            return $this->validationErrorResponse($request, $validator);
         }
 
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            try {
-                $imagePath = $request->file('image')->store('products', 'public');
-            } catch (\Exception $e) {
-                return back()->withErrors(['image' => 'Görsel yüklenirken bir hata oluştu: ' . $e->getMessage()])->withInput();
-            }
-        } else {
-            return back()->withErrors(['image' => 'Ana görsel zorunludur!'])->withInput();
+        try {
+            $imageUrl = $this->cloudinary->upload(
+                $request->file('image'),
+                config('cloudinary.folder').'/products'
+            );
+        } catch (\Throwable $e) {
+            return back()->withErrors(['image' => 'Ana görsel yüklenemedi: '.$e->getMessage()])->withInput();
         }
-        
-        // Handle multiple images upload
-        $imagesPaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $imagesPaths[] = $image->store('products', 'public');
-            }
-        }
-        
-        // Process sizes (checkbox values)
-        $sizesData = [];
-        if ($request->has('sizes') && is_array($request->sizes)) {
-            $availableSizes = [
-                's' => ['id' => 's', 'name' => 'S size (1.5 kg - 5-6 kişilik)', 'price' => $request->base_price],
-                'm' => ['id' => 'm', 'name' => 'M size (2.5 kg - 9-10 kişilik)', 'price' => $request->base_price * 1.2],
-                'l' => ['id' => 'l', 'name' => 'L size (3.5 kg - 12-15 kişilik)', 'price' => $request->base_price * 1.5],
-            ];
-            
-            foreach ($request->sizes as $sizeId) {
-                if (isset($availableSizes[$sizeId])) {
-                    $sizesData[] = $availableSizes[$sizeId];
-                }
-            }
-        }
-        
-        // Process flavors (from form array)
-        $flavorsData = [];
-        if ($request->has('flavors') && is_array($request->flavors)) {
-            foreach ($request->flavors as $flavor) {
-                if (!empty($flavor['name'])) {
-                    $flavorsData[] = [
-                        'id' => strtolower(str_replace(' ', '_', $flavor['name'])),
-                        'name' => $flavor['name'],
-                        'image' => $flavor['image'] ?? null,
-                    ];
-                }
-            }
+
+        try {
+            $galleryImages = $this->uploadGalleryImages($request);
+            $flavors = $this->buildFlavors($request);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['image' => $e->getMessage()])->withInput();
         }
 
         $product = Product::create([
             'name' => $request->name,
             'description' => $request->description,
             'base_price' => $request->base_price,
-            'image' => $imagePath ? Storage::url($imagePath) : null,
-            'images' => !empty($imagesPaths) ? array_map(fn($path) => Storage::url($path), $imagesPaths) : null,
-            'sizes' => !empty($sizesData) ? $sizesData : null,
-            'flavors' => !empty($flavorsData) ? $flavorsData : null,
+            'image' => $imageUrl,
+            'images' => ! empty($galleryImages) ? $galleryImages : null,
+            'sizes' => $this->buildSizes($request) ?: null,
+            'flavors' => ! empty($flavors) ? $flavors : null,
             'badge' => $request->badge,
             'sort_order' => $request->sort_order ?? 0,
-            'is_active' => $request->has('is_active') ? true : false,
+            'is_active' => $request->has('is_active'),
         ]);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'message' => 'Ürün başarıyla oluşturuldu.',
-                'data' => $product
+                'data' => $product,
             ], 201);
         }
 
@@ -139,132 +83,73 @@ class ProductController extends Controller
             ->with('success', 'Ürün başarıyla oluşturuldu.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $product = Product::findOrFail($id);
-        return view('admin.products.show', compact('product'));
+
+        return redirect()->route('admin.products.edit', $product);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $product = Product::findOrFail($id);
+
         return view('admin.products.edit', compact('product'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $product = Product::findOrFail($id);
-        
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'base_price' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'badge' => 'nullable|string|max:50',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'nullable|string',
-            'flavors' => 'nullable|array',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer',
-        ]);
+        $validator = $this->makeValidator($request, false);
 
         if ($validator->fails()) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+            return $this->validationErrorResponse($request, $validator);
         }
 
-        // Handle image upload
-        $imagePath = $product->image;
+        $imageUrl = $product->image;
+        $images = $product->images ?? [];
+
         if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($product->image) {
-                $oldPath = str_replace('/storage/', '', parse_url($product->image, PHP_URL_PATH));
-                Storage::disk('public')->delete($oldPath);
-            }
-            $imagePath = Storage::url($request->file('image')->store('products', 'public'));
-        }
-        
-        // Handle multiple images upload
-        $imagesPaths = $product->images ?? [];
-        if ($request->hasFile('images')) {
-            // Delete old images if exists
-            if ($product->images) {
-                foreach ($product->images as $oldImage) {
-                    $oldPath = str_replace('/storage/', '', parse_url($oldImage, PHP_URL_PATH));
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
-            $imagesPaths = [];
-            foreach ($request->file('images') as $image) {
-                $imagesPaths[] = Storage::url($image->store('products', 'public'));
+            try {
+                $this->cloudinary->delete($product->image);
+                $imageUrl = $this->cloudinary->upload(
+                    $request->file('image'),
+                    config('cloudinary.folder').'/products'
+                );
+            } catch (\Throwable $e) {
+                return back()->withErrors(['image' => 'Ana görsel yüklenemedi: '.$e->getMessage()])->withInput();
             }
         }
-        
-        // Process sizes (checkbox values)
-        $sizesData = $product->sizes ?? [];
-        if ($request->has('sizes') && is_array($request->sizes)) {
-            $availableSizes = [
-                's' => ['id' => 's', 'name' => 'S size (1.5 kg - 5-6 kişilik)', 'price' => $request->base_price],
-                'm' => ['id' => 'm', 'name' => 'M size (2.5 kg - 9-10 kişilik)', 'price' => $request->base_price * 1.2],
-                'l' => ['id' => 'l', 'name' => 'L size (3.5 kg - 12-15 kişilik)', 'price' => $request->base_price * 1.5],
-            ];
-            
-            $sizesData = [];
-            foreach ($request->sizes as $sizeId) {
-                if (isset($availableSizes[$sizeId])) {
-                    $sizesData[] = $availableSizes[$sizeId];
-                }
+
+        try {
+            if ($request->hasFile('images')) {
+                $newImages = $this->uploadGalleryImages($request);
+                $images = array_values(array_merge($images, $newImages));
             }
-        }
-        
-        // Process flavors (from form array)
-        $flavorsData = $product->flavors ?? [];
-        if ($request->has('flavors') && is_array($request->flavors)) {
-            $flavorsData = [];
-            foreach ($request->flavors as $flavor) {
-                if (!empty($flavor['name'])) {
-                    $flavorsData[] = [
-                        'id' => strtolower(str_replace(' ', '_', $flavor['name'])),
-                        'name' => $flavor['name'],
-                        'image' => $flavor['image'] ?? null,
-                    ];
-                }
-            }
+
+            $flavors = $this->buildFlavors($request);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['image' => $e->getMessage()])->withInput();
         }
 
         $product->update([
             'name' => $request->name,
             'description' => $request->description,
             'base_price' => $request->base_price,
-            'image' => $imagePath,
-            'images' => !empty($imagesPaths) ? $imagesPaths : null,
-            'sizes' => !empty($sizesData) ? $sizesData : null,
-            'flavors' => !empty($flavorsData) ? $flavorsData : null,
+            'image' => $imageUrl,
+            'images' => ! empty($images) ? $images : null,
+            'sizes' => $this->buildSizes($request) ?: null,
+            'flavors' => ! empty($flavors) ? $flavors : null,
             'badge' => $request->badge,
             'sort_order' => $request->sort_order ?? $product->sort_order,
-            'is_active' => $request->has('is_active') || ($request->is_active ?? false),
+            'is_active' => $request->has('is_active'),
         ]);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'message' => 'Ürün başarıyla güncellendi.',
-                'data' => $product
+                'data' => $product->fresh(),
             ]);
         }
 
@@ -272,22 +157,145 @@ class ProductController extends Controller
             ->with('success', 'Ürün başarıyla güncellendi.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
+
+        $this->cloudinary->delete($product->image);
+
+        if ($product->images) {
+            foreach ($product->images as $image) {
+                $this->cloudinary->delete($image);
+            }
+        }
+
+        if ($product->flavors) {
+            foreach ($product->flavors as $flavor) {
+                $this->cloudinary->delete($flavor['image'] ?? null);
+            }
+        }
+
         $product->delete();
 
         if (request()->wantsJson() || request()->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'message' => 'Ürün başarıyla silindi.'
+                'message' => 'Ürün başarıyla silindi.',
             ]);
         }
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Ürün başarıyla silindi.');
+    }
+
+    private function makeValidator(Request $request, bool $isCreate)
+    {
+        return Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'base_price' => 'required|numeric|min:0',
+            'image' => ($isCreate ? 'required' : 'nullable').'|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'badge' => 'nullable|string|max:50',
+            'sizes' => 'nullable|array',
+            'sizes.*' => 'nullable|string|in:s,m,l',
+            'flavors' => 'nullable|array',
+            'flavors.*.name' => 'nullable|string|max:255',
+            'flavors.*.existing_image' => 'nullable|string|max:500',
+            'flavors.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'sort_order' => 'nullable|integer',
+        ]);
+    }
+
+    private function validationErrorResponse(Request $request, $validator)
+    {
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        return back()->withErrors($validator)->withInput();
+    }
+
+    private function uploadGalleryImages(Request $request): array
+    {
+        $paths = [];
+
+        if (! $request->hasFile('images')) {
+            return $paths;
+        }
+
+        foreach ($request->file('images') as $image) {
+            if (! $image) {
+                continue;
+            }
+
+            try {
+                $paths[] = $this->cloudinary->upload(
+                    $image,
+                    config('cloudinary.folder').'/products/gallery'
+                );
+            } catch (\Throwable $e) {
+                throw new \RuntimeException('Galeri görseli yüklenemedi: '.$e->getMessage());
+            }
+        }
+
+        return $paths;
+    }
+
+    private function buildSizes(Request $request): array
+    {
+        $sizesData = [];
+        $availableSizes = [
+            's' => ['id' => 's', 'name' => 'S size (1.5 kg - 5-6 kişilik)', 'price' => (float) $request->base_price, 'description' => '5-6 kişilik'],
+            'm' => ['id' => 'm', 'name' => 'M size (2.5 kg - 9-10 kişilik)', 'price' => (float) $request->base_price * 1.2, 'description' => '9-10 kişilik'],
+            'l' => ['id' => 'l', 'name' => 'L size (3.5 kg - 12-15 kişilik)', 'price' => (float) $request->base_price * 1.5, 'description' => '12-15 kişilik'],
+        ];
+
+        foreach ($request->input('sizes', []) as $sizeId) {
+            if (isset($availableSizes[$sizeId])) {
+                $sizesData[] = $availableSizes[$sizeId];
+            }
+        }
+
+        return $sizesData;
+    }
+
+    private function buildFlavors(Request $request): array
+    {
+        $flavorsData = [];
+
+        foreach ($request->input('flavors', []) as $index => $flavor) {
+            if (empty($flavor['name'])) {
+                continue;
+            }
+
+            $imageUrl = $flavor['existing_image'] ?? null;
+
+            if ($request->hasFile("flavors.{$index}.image")) {
+                try {
+                    if ($imageUrl) {
+                        $this->cloudinary->delete($imageUrl);
+                    }
+
+                    $imageUrl = $this->cloudinary->upload(
+                        $request->file("flavors.{$index}.image"),
+                        config('cloudinary.folder').'/products/flavors'
+                    );
+                } catch (\Throwable $e) {
+                    throw new \RuntimeException('Lezzet görseli yüklenemedi: '.$e->getMessage());
+                }
+            }
+
+            $flavorsData[] = [
+                'id' => Str::slug($flavor['name'], '_'),
+                'name' => $flavor['name'],
+                'image' => $imageUrl,
+            ];
+        }
+
+        return $flavorsData;
     }
 }

@@ -77,7 +77,9 @@
                         <div class="swiper-slide">
                             <div class="product-card" data-product-id="{{ $product->id }}">
                                 <div class="product-image">
-                                    <img src="{{ $product->image ?? 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80' }}" alt="{{ $product->name }}">
+                                    @if($product->image)
+                                        <img src="{{ $product->image }}" alt="{{ $product->name }}">
+                                    @endif
                                     @if($product->badge)
                                         <span class="product-badge">{{ $product->badge }}</span>
                                     @endif
@@ -135,32 +137,8 @@
                     @endforeach
                 </div>
             @else
-                <div class="flavour-grid">
-                    <!-- Default flavours if none in database -->
-                    <div class="flavour-item flavour-col-2">
-                        <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=1200&q=80" alt="Rainbow Cake">
-                        <div class="flavour-overlay">
-                            <h3>Gökkuşağı Pasta</h3>
-                            <p>Renkli katmanlar ve vanilya kreması ile özel günlerinize renk katın</p>
-                            <button class="btn btn-explore">Keşfet</button>
-                        </div>
-                    </div>
-                    <div class="flavour-item flavour-col-1">
-                        <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=80" alt="Chocolate Layers">
-                        <div class="flavour-overlay">
-                            <h3>Çikolata Katmanları</h3>
-                            <p>Sütlü ve bitter çikolata uyumu</p>
-                            <button class="btn btn-explore">Keşfet</button>
-                        </div>
-                    </div>
-                    <div class="flavour-item flavour-col-1">
-                        <img src="https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=800&q=80" alt="Berry Delight">
-                        <div class="flavour-overlay">
-                            <h3>Orman Meyveli</h3>
-                            <p>Taze orman meyveleri ve hafif krema</p>
-                            <button class="btn btn-explore">Keşfet</button>
-                        </div>
-                    </div>
+                <div class="text-center py-5">
+                    <p>Henüz lezzet eklenmemiş. Admin panelinden ekleyebilirsiniz.</p>
                 </div>
             @endif
         </div>

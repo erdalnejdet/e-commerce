@@ -13,124 +13,6 @@ window.bootstrap = bootstrap;
 // Make SweetAlert2 available globally
 window.Swal = Swal;
 
-// Product data
-const products = {
-  1: {
-    id: 1,
-    name: 'Şık Çanta Pasta',
-    description: 'El yapımı fondant detaylar ile özenle hazırlanmış özel tasarım pasta. Çikolata ganaj ve kadife kaplama ile.',
-    basePrice: 850,
-    image: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&q=80',
-      'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&q=80',
-      'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 850, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 1010, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'nutella', name: 'Nutella', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&q=80' },
-      { id: 'tropical', name: 'Tropical', image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=100&q=80' },
-      { id: 'pistachio', name: 'Pistachio Raspberry', image: 'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=100&q=80' },
-      { id: 'chocolate', name: 'Chocolate Delight', image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=100&q=80' }
-    ]
-  },
-  2: {
-    id: 2,
-    name: 'Altın Detaylı Pasta',
-    description: 'Çikolata ganaj ve altın varak ile süslenmiş lüks pasta.',
-    basePrice: 950,
-    image: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=600&q=80',
-      'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 950, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 1110, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'nutella', name: 'Nutella', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&q=80' },
-      { id: 'tropical', name: 'Tropical', image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=100&q=80' },
-      { id: 'pistachio', name: 'Pistachio Raspberry', image: 'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=100&q=80' }
-    ]
-  },
-  3: {
-    id: 3,
-    name: 'Red Velvet Pasta',
-    description: 'Klasik kırmızı kadife lezzeti, cream cheese frosting ile.',
-    basePrice: 750,
-    image: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 750, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 910, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'classic', name: 'Classic Red Velvet', image: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=100&q=80' },
-      { id: 'chocolate', name: 'Chocolate Velvet', image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=100&q=80' }
-    ]
-  },
-  4: {
-    id: 4,
-    name: 'Mavi Rüya Pasta',
-    description: 'Vanilya ve yaban mersini ile hafif ve lezzetli.',
-    basePrice: 800,
-    image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 800, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 960, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'blueberry', name: 'Blueberry Vanilla', image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=100&q=80' },
-      { id: 'lemon', name: 'Lemon Blueberry', image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=100&q=80' }
-    ]
-  },
-  5: {
-    id: 5,
-    name: 'Çikolata Delisi',
-    description: 'Üç kat çikolata lezzeti - bitter, sütlü ve beyaz çikolata.',
-    basePrice: 700,
-    image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 700, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 860, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'triple', name: 'Triple Chocolate', image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=100&q=80' },
-      { id: 'dark', name: 'Dark Chocolate', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&q=80' }
-    ]
-  },
-  6: {
-    id: 6,
-    name: 'Meyveli Şölen',
-    description: 'Taze meyveler ve hafif krema ile sağlıklı lezzet.',
-    basePrice: 650,
-    image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=600&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=600&q=80'
-    ],
-    sizes: [
-      { id: 's', name: 'S size (1.5 kg - 5-6 kişilik)', price: 650, description: '5-6 kişilik' },
-      { id: 'm', name: 'M size (2.5 kg - 9-10 kişilik)', price: 810, description: '9-10 kişilik' }
-    ],
-    flavors: [
-      { id: 'mixed', name: 'Mixed Fruits', image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=100&q=80' },
-      { id: 'berry', name: 'Berry Mix', image: 'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=100&q=80' }
-    ]
-  }
-};
-
 // Cart state
 let cart = [];
 let currentProduct = null;
@@ -238,25 +120,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Open product modal
 function openProductModal(productId) {
-  // Use database products if available, otherwise fallback to static data
   const dbProduct = window.productsData && window.productsData[productId];
-  
-  if (dbProduct) {
-    currentProduct = {
-      id: dbProduct.id,
-      name: dbProduct.name,
-      description: dbProduct.description || '',
-      basePrice: dbProduct.basePrice,
-      image: dbProduct.image || '',
-      images: dbProduct.images && dbProduct.images.length > 0 ? dbProduct.images : (dbProduct.image ? [dbProduct.image] : []),
-      sizes: dbProduct.sizes || [],
-      flavors: dbProduct.flavors || [],
-    };
-  } else {
-    currentProduct = products[productId];
-  }
-  
-  if (!currentProduct) {
+
+  if (!dbProduct) {
     Swal.fire({
       icon: 'error',
       title: 'Hata!',
@@ -264,6 +130,17 @@ function openProductModal(productId) {
     });
     return;
   }
+
+  currentProduct = {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    description: dbProduct.description || '',
+    basePrice: dbProduct.basePrice,
+    image: dbProduct.image || '',
+    images: dbProduct.images && dbProduct.images.length > 0 ? dbProduct.images : (dbProduct.image ? [dbProduct.image] : []),
+    sizes: dbProduct.sizes || [],
+    flavors: dbProduct.flavors || [],
+  };
 
   selectedSize = null;
   selectedFlavor = null;
@@ -545,3 +422,5 @@ function showToast(title, message, type = 'success') {
 if (typeof window.showToast === 'undefined') {
     window.showToast = showToast;
 }
+
+window.openProductModal = openProductModal;

@@ -4,76 +4,118 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PageSection;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 
 class PageSectionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private const TEXT_FIELDS = [
+        'hero_title',
+        'hero_subtitle',
+        'top_picks_title',
+        'top_picks_subtitle',
+        'flavours_title',
+        'flavours_subtitle',
+        'about_title',
+        'about_content_1',
+        'about_content_2',
+    ];
+
+    private const IMAGE_FIELDS = [
+        'hero_image' => 'pages/hero',
+        'about_image' => 'pages/about',
+    ];
+
+    public function __construct(private CloudinaryService $cloudinary)
+    {
+    }
+
     public function index()
     {
         $sections = PageSection::where('page', 'home')
             ->orderBy('sort_order')
             ->get();
-        
+
         if (request()->wantsJson() || request()->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'data' => $sections
+                'data' => $sections,
             ]);
         }
-        
+
         $sections = $sections->groupBy('section_key');
+
         return view('admin.pages.index', compact('sections'));
     }
 
-    /**
-     * Show the form for editing page sections
-     */
     public function edit($page = 'home')
     {
         $sections = PageSection::where('page', $page)
             ->orderBy('sort_order')
             ->get();
-        
+
         return view('admin.pages.edit', compact('sections', 'page'));
     }
 
-    /**
-     * Update page sections
-     */
     public function update(Request $request, $page = 'home')
     {
-        $data = $request->except(['_token', '_method']);
-        
-        foreach ($data as $key => $value) {
-            if ($value === null) continue;
-            
-            $type = 'text';
-            
-            // Determine type based on key or value
-            if (is_array($value)) {
-                $type = 'json';
-                $value = json_encode($value);
-            } elseif (filter_var($value, FILTER_VALIDATE_URL) || (is_string($value) && str_starts_with($value, 'http'))) {
-                $type = 'image';
+        try {
+            foreach (self::TEXT_FIELDS as $key) {
+                if (! $request->has($key)) {
+                    continue;
+                }
+
+                PageSection::updateOrCreate(
+                    ['page' => $page, 'section_key' => $key],
+                    [
+                        'section_type' => 'text',
+                        'content' => $request->input($key),
+                        'sort_order' => 0,
+                    ]
+                );
             }
-            
-            PageSection::updateOrCreate(
-                ['page' => $page, 'section_key' => $key],
-                [
-                    'section_type' => $type,
-                    'content' => is_array($value) ? json_encode($value) : $value,
-                    'sort_order' => 0,
-                ]
-            );
+
+            foreach (self::IMAGE_FIELDS as $key => $folder) {
+                $existing = PageSection::where('page', $page)
+                    ->where('section_key', $key)
+                    ->value('content');
+
+                $imageUrl = $request->input($key.'_existing', $existing);
+
+                if ($request->hasFile($key)) {
+                    $this->cloudinary->delete($existing);
+                    $imageUrl = $this->cloudinary->upload(
+                        $request->file($key),
+                        config('cloudinary.folder').'/'.$folder
+                    );
+                }
+
+                if ($imageUrl) {
+                    PageSection::updateOrCreate(
+                        ['page' => $page, 'section_key' => $key],
+                        [
+                            'section_type' => 'image',
+                            'content' => $imageUrl,
+                            'sort_order' => 0,
+                        ]
+                    );
+                }
+            }
+        } catch (\Throwable $e) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return back()->withErrors(['image' => $e->getMessage()])->withInput();
         }
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'message' => 'Sayfa içerikleri başarıyla güncellendi.'
+                'message' => 'Sayfa içerikleri başarıyla güncellendi.',
             ]);
         }
 

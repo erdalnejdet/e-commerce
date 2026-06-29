@@ -17,7 +17,7 @@
         </div>
     @endif
     
-    <form action="/admin/flavours" method="POST">
+    <form action="/admin/flavours" method="POST" enctype="multipart/form-data">
         @csrf
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -44,9 +44,9 @@
         </div>
         
         <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Görsel URL *</label>
-            <input type="url" name="image" required value="{{ old('image') }}" placeholder="https://images.unsplash.com/..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
-            <small style="color: #666; font-size: 0.85rem;">Görselin tam URL adresini girin</small>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Görsel *</label>
+            <input type="file" name="image" accept="image/*" required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            <small style="color: #666; font-size: 0.85rem;">Maksimum 5MB (Cloudinary'e yüklenir)</small>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">

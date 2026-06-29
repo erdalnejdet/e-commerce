@@ -6,6 +6,17 @@
 <div class="admin-card">
     <h2 style="margin: 0 0 2rem; color: var(--admin-dark);">Ürün Düzenle</h2>
     
+    @if($errors->any())
+        <div class="alert alert-danger" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <strong>Hata!</strong> Lütfen formu kontrol edin:
+            <ul style="margin: 0.5rem 0 0; padding-left: 1.5rem;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    
     <form action="/admin/products/{{ $product->id }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -35,7 +46,7 @@
                 </div>
             @endif
             <input type="file" name="image" accept="image/*" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
-            <small style="color: #666; font-size: 0.85rem;">Yeni görsel yüklemek için seçin (Maksimum 2MB)</small>
+            <small style="color: #666; font-size: 0.85rem;">Yeni görsel yüklemek için seçin (Maksimum 5MB, Cloudinary'e yüklenir)</small>
         </div>
         
         <div style="margin-bottom: 1.5rem;">
@@ -48,7 +59,7 @@
                 </div>
             @endif
             <input type="file" name="images[]" accept="image/*" multiple style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
-            <small style="color: #666; font-size: 0.85rem;">Yeni görseller eklemek için seçin</small>
+            <small style="color: #666; font-size: 0.85rem;">Mevcut galeriye yeni görseller ekler</small>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -104,8 +115,12 @@
                                 <input type="text" name="flavors[{{ $index }}][name]" value="{{ $flavor['name'] ?? '' }}" placeholder="Örn: Nutella" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel URL</label>
-                                <input type="url" name="flavors[{{ $index }}][image]" value="{{ $flavor['image'] ?? '' }}" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel</label>
+                                @if(!empty($flavor['image']))
+                                    <input type="hidden" name="flavors[{{ $index }}][existing_image]" value="{{ $flavor['image'] }}">
+                                    <img src="{{ $flavor['image'] }}" alt="" style="max-width: 80px; max-height: 80px; border-radius: 8px; margin-bottom: 0.5rem; display: block;">
+                                @endif
+                                <input type="file" name="flavors[{{ $index }}][image]" accept="image/*" style="width: 100%; padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                             </div>
                             <div style="display: flex; align-items: flex-end;">
                                 <button type="button" onclick="removeFlavor(this)" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
@@ -121,8 +136,8 @@
                             <input type="text" name="flavors[0][name]" placeholder="Örn: Nutella" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel URL</label>
-                            <input type="url" name="flavors[0][image]" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel</label>
+                            <input type="file" name="flavors[0][image]" accept="image/*" style="width: 100%; padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                         </div>
                         <div style="display: flex; align-items: flex-end;">
                             <button type="button" onclick="removeFlavor(this)" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
@@ -169,8 +184,8 @@
                 <input type="text" name="flavors[${flavorIndex}][name]" placeholder="Örn: Nutella" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
             </div>
             <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel URL</label>
-                <input type="url" name="flavors[${flavorIndex}][image]" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Görsel</label>
+                <input type="file" name="flavors[${flavorIndex}][image]" accept="image/*" style="width: 100%; padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 8px;">
             </div>
             <div style="display: flex; align-items: flex-end;">
                 <button type="button" onclick="removeFlavor(this)" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">

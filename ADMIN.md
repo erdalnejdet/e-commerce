@@ -25,28 +25,30 @@
 - **Ürün Listesi:** Tüm ürünleri görüntüleme
 - **Yeni Ürün Ekleme:** 
   - Ürün adı, açıklama, fiyat
-  - Görsel URL
+  - Ana görsel ve galeri görselleri (Cloudinary'e yüklenir)
+  - Lezzet görselleri dosya olarak yüklenir
   - Badge (Yeni, Popüler, Özel, Trend)
-  - Boyutlar (JSON formatında)
-  - Lezzetler (JSON formatında)
+  - Boyutlar (S / M / L checkbox)
+  - Lezzetler (ad + görsel)
   - Aktif/Pasif durumu
   - Sıralama
-- **Ürün Düzenleme:** Mevcut ürünleri güncelleme
+- **Ürün Düzenleme:** Mevcut ürünleri güncelleme (hata mesajları formda gösterilir)
 - **Ürün Silme:** Ürünleri silme
+
+**Cloudinary ayarları (.env):**
+```
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_FOLDER=pauline
+```
+Cloudinary yapılandırılmamışsa görsel yüklemeleri çalışmaz.
 
 ### 4. Sayfa İçerik Yönetimi
 Ana sayfa içeriklerini düzenleme:
-- **Hero Bölümü:**
-  - Başlık
-  - Alt başlık
-  - Hero görsel URL
-- **Bölüm Başlıkları:**
-  - Top Picks başlık ve alt başlık
-  - Lezzetler başlık ve alt başlık
-- **Hakkımızda Bölümü:**
-  - Başlık
-  - İçerik (2 paragraf)
-  - Görsel URL
+- **Hero Bölümü:** başlık, alt başlık, görsel (Cloudinary)
+- **Bölüm başlıkları:** Top Picks, Lezzetler
+- **Hakkımızda:** başlık, metinler, görsel (Cloudinary)
 
 ## API Endpoints
 

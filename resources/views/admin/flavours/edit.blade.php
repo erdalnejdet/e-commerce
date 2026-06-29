@@ -17,7 +17,7 @@
         </div>
     @endif
     
-    <form action="/admin/flavours/{{ $flavour->id }}" method="POST">
+    <form action="/admin/flavours/{{ $flavour->id }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -45,14 +45,14 @@
         </div>
         
         <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Görsel URL *</label>
-            <input type="url" name="image" required value="{{ old('image', $flavour->image) }}" placeholder="https://images.unsplash.com/..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Görsel</label>
             @if($flavour->image)
-                <div style="margin-top: 0.5rem;">
+                <div style="margin-bottom: 0.5rem;">
                     <img src="{{ $flavour->image }}" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #e0e0e0;">
                 </div>
             @endif
-            <small style="color: #666; font-size: 0.85rem;">Görselin tam URL adresini girin</small>
+            <input type="file" name="image" accept="image/*" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            <small style="color: #666; font-size: 0.85rem;">Yeni görsel seçmezseniz mevcut görsel korunur (Cloudinary)</small>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
